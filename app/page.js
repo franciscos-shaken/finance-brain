@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <main>
       <h1>Olá, Shaken 👋</h1>
-      <p>Finance Brain está vivo.</p>
+      <p>Finance Brain está vivo. Alteração feita a partir do Cowork.</p>
       <ul>
         <li>
           <strong>Ambiente:</strong> {ambiente}
