@@ -7,7 +7,7 @@ const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "—";
 export default function Home() {
   return (
     <main>
-      <h1>Olá, mundo 👋</h1>
+      <h1>Olá, Shaken 👋</h1>
       <p>Finance Brain está vivo.</p>
       <ul>
         <li>

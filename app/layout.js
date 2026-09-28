@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Finance Brain",
-  description: "Finance Brain — Olá, mundo",
+  description: "Finance Brain — Olá, Shaken",
 };
 
 export default function RootLayout({ children }) {
