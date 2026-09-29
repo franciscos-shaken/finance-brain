@@ -1,25 +1,33 @@
-// Variáveis de sistema que o Vercel define automaticamente em cada deploy.
-// Localmente não existem, por isso mostramos um valor por omissão.
-const ambiente = process.env.VERCEL_ENV ?? "local";
-const branch = process.env.VERCEL_GIT_COMMIT_REF ?? "—";
-const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "—";
+import Pagina from "@/components/Pagina";
+import Resumo from "@/components/Resumo";
+import { exigirSessao } from "@/lib/sessao";
 
-export default function Home() {
+export default async function Inicio({ searchParams }) {
+  const sessao = await exigirSessao();
+  const sp = await searchParams;
+  const { supabase, acessos } = sessao;
+  const [{ data: entidades }, { data: docs }] = await Promise.all([
+    supabase.from("entidades").select("id,codigo,nome_legal").order("codigo"),
+    supabase.from("documentos").select("id,entidade_id,estado"),
+  ]);
+  const porEntidade = Object.fromEntries((entidades ?? []).map((e) => [e.id, 0]));
+  (docs ?? []).forEach((d) => { porEntidade[d.entidade_id] = (porEntidade[d.entidade_id] ?? 0) + 1; });
+  const porAprovar = (docs ?? []).filter((d) => d.estado === "por_aprovar").length;
+
   return (
-    <main>
-      <h1>Olá, mundo 👋</h1>
-      <p>Finance Brain está vivo.</p>
-      <ul>
-        <li>
-          <strong>Ambiente:</strong> {ambiente}
-        </li>
-        <li>
-          <strong>Branch:</strong> {branch}
-        </li>
-        <li>
-          <strong>Commit:</strong> <code>{commit}</code>
-        </li>
-      </ul>
-    </main>
+    <Pagina sessao={sessao}>
+      {sp?.erro === "sem-permissao" && <p className="aviso">Não tens permissão para abrir essa página.</p>}
+      <h1>Olá, {acessos.pessoa.nome.split(" ")[0]}</h1>
+      <p className="muted">O que vês aqui depende dos teus perfis e dos centros de custo que aprovas.</p>
+      <Resumo acessos={acessos} />
+      <h2>Documentos que podes ver</h2>
+      <div className="cards">
+        <div className="card"><span className="muted">Total</span><b>{docs?.length ?? 0}</b></div>
+        <div className="card"><span className="muted">Por aprovar</span><b>{porAprovar}</b></div>
+        {(entidades ?? []).map((e) => (
+          <div className="card" key={e.id}><span className="muted">{e.codigo}</span><b>{porEntidade[e.id]}</b></div>
+        ))}
+      </div>
+    </Pagina>
   );
 }
