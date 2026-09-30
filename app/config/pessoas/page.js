@@ -85,11 +85,11 @@ export default async function Pessoas({ searchParams }) {
   return (
     <Pagina sessao={sessao}>
       <h1>Pessoas e perfis</h1>
-      <p className="muted">"Pode entrar" controla o login. Desativar uma pessoa tira-lhe o acesso de imediato e guarda o histórico. O acesso a dados salariais é dado à parte e nenhum perfil o inclui.</p>
+      <p className="muted">"Pode entrar" controla o login. Desativar uma pessoa tira-lhe o acesso de imediato e guarda o histórico. O acesso a dados salariais é dado à parte e nenhum perfil o inclui. Quem não tem perfil só vê os documentos que aprova como owner.</p>
       <Mensagens sp={sp} />
       <div className="tbl">
         <table>
-          <thead><tr><th>Nome</th><th>Email</th><th>Entidade</th><th>Estado</th><th>Pode entrar</th><th>Perfis</th><th>Atribuir perfil</th><th>Salarial</th></tr></thead>
+          <thead><tr><th>Nome</th><th>Email</th><th>Entidade</th><th>Estado</th><th>Pode entrar</th><th>Perfis atuais</th><th>Acrescentar perfil</th><th>Salarial</th></tr></thead>
           <tbody>
             {(pessoas ?? []).map((p) => (
               <tr key={p.id} className={p.ativa ? "" : "inativo"}>
@@ -98,13 +98,14 @@ export default async function Pessoas({ searchParams }) {
                 <td>{cod[p.entidade_id] ?? "—"}</td>
                 <td>
                   <form action={alternar} className="inline"><input type="hidden" name="id" value={p.id} /><input type="hidden" name="campo" value="ativa" /><input type="hidden" name="valor" value={String(p.ativa)} />
-                    <button className="btn btn-pequeno">{p.ativa ? "Ativa · desativar" : "Inativa · reativar"}</button></form>
+                    {p.ativa ? "Ativa" : "Inativa"} <button className="btn btn-pequeno">{p.ativa ? "Desativar" : "Reativar"}</button></form>
                 </td>
                 <td>
                   <form action={alternar} className="inline"><input type="hidden" name="id" value={p.id} /><input type="hidden" name="campo" value="pode_entrar" /><input type="hidden" name="valor" value={String(p.pode_entrar)} />
-                    <button className="btn btn-pequeno" disabled={!p.ativa}>{p.pode_entrar ? "Sim" : "Não"}</button></form>
+                    {p.pode_entrar ? "Sim" : "Não"} <button className="btn btn-pequeno" disabled={!p.ativa}>{p.pode_entrar ? "Bloquear" : "Permitir"}</button></form>
                 </td>
                 <td>
+                  {!(perfisDe[p.id] ?? []).length && <span className="muted">Sem perfil</span>}
                   {(perfisDe[p.id] ?? []).map((pf) => (
                     <div key={pf.id} style={{ whiteSpace: "nowrap" }}>
                       <span className={emVigor(pf) ? "chip" : "chip warn"}>{nomePerfil[pf.perfil]} · {pf.entidade_id ? cod[pf.entidade_id] : "todas"}{emVigor(pf) ? "" : ` · terminado ${pf.ate}`}</span>{" "}
@@ -119,14 +120,14 @@ export default async function Pessoas({ searchParams }) {
                 <td>
                   <form action={novoPerfil} className="inline">
                     <input type="hidden" name="pessoa_id" value={p.id} />
-                    <select name="perfil" aria-label="Perfil">{PERFIS.map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select>{" "}
-                    <select name="entidade_id" aria-label="Entidade"><option value="">Todas</option>{(entidades ?? []).map((e) => <option key={e.id} value={e.id}>{e.codigo}</option>)}</select>{" "}
-                    <button className="btn btn-pequeno">+</button>
+                    <select name="perfil" aria-label="Perfil a atribuir" required defaultValue=""><option value="" disabled>Escolher perfil…</option>{[...PERFIS].reverse().map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select>{" "}
+                    <select name="entidade_id" aria-label="Entidade"><option value="">Todas as entidades</option>{(entidades ?? []).map((e) => <option key={e.id} value={e.id}>{e.codigo}</option>)}</select>{" "}
+                    <button className="btn btn-pequeno">Atribuir</button>
                   </form>
                 </td>
                 <td>
                   <form action={acessoSalarial} className="inline"><input type="hidden" name="pessoa_id" value={p.id} /><input type="hidden" name="acao" value={temSalarial.has(p.id) ? "tirar" : "dar"} />
-                    <button className="btn btn-pequeno">{temSalarial.has(p.id) ? "Sim · retirar" : "Não · dar"}</button></form>
+                    {temSalarial.has(p.id) ? "Com acesso" : "Sem acesso"} <button className="btn btn-pequeno">{temSalarial.has(p.id) ? "Retirar" : "Dar"}</button></form>
                 </td>
               </tr>
             ))}
